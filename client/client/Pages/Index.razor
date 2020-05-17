@@ -1,0 +1,47 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager NavigationManager
+
+
+<h1> @hubConnection.State</h1>
+
+@foreach (var quote in quotes){
+    <h3> @quote.Author</h3>
+    <p> @quote.Quote</p>
+}
+
+
+
+@code 
+{
+ 
+ private HubConnection hubConnection;
+ private List<IncomingQuote> quotes = new List<IncomingQuote>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        hubConnection = new HubConnectionBuilder().WithUrl("http://localhost:7071/api").Build();
+        hubConnection.On<IncomingQuote>("incomingQuote", (incomingQuote) =>
+            {
+
+                quotes.Add(incomingQuote);
+                StateHasChanged();
+
+
+            }
+                         
+            );
+
+            await hubConnection.StartAsync();
+        
+    }
+
+    public bool IsConnected => hubConnection.State == HubConnectionState.Connected;
+
+    public class IncomingQuote {
+        public string Author {get; set;}
+        public string Quote {get; set;}
+    }
+
+
+}
